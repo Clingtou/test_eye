@@ -9642,6 +9642,13 @@ var mosseFilterResponses = function() {
     webgazer.reg.RidgeReg.prototype.setData = function(data) {
         for (var i = 0; i < data.length; i++) {
             //TODO this is a kludge, needs to be fixed
+            if (!data[i].eyes || !data[i].eyes.left || !data[i].eyes.right ||
+                !data[i].eyes.left.patch || !data[i].eyes.right.patch ||
+                data[i].eyes.left.patch.length === 0 || data[i].eyes.right.patch.length === 0 ||
+                data[i].eyes.left.width <= 0 || data[i].eyes.left.height <= 0 ||
+                data[i].eyes.right.width <= 0 || data[i].eyes.right.height <= 0) {
+                continue;
+            }
             data[i].eyes.left.patch = new ImageData(new Uint8ClampedArray(data[i].eyes.left.patch), data[i].eyes.left.width, data[i].eyes.left.height);
             data[i].eyes.right.patch = new ImageData(new Uint8ClampedArray(data[i].eyes.right.patch), data[i].eyes.right.width, data[i].eyes.right.height);
             this.addData(data[i].eyes, data[i].screenPos, data[i].type);
@@ -9905,6 +9912,13 @@ var mosseFilterResponses = function() {
     webgazer.reg.RidgeWeightedReg.prototype.setData = function(data) {
         for (var i = 0; i < data.length; i++) {
             //TODO this is a kludge, needs to be fixed
+            if (!data[i].eyes || !data[i].eyes.left || !data[i].eyes.right ||
+                !data[i].eyes.left.patch || !data[i].eyes.right.patch ||
+                data[i].eyes.left.patch.length === 0 || data[i].eyes.right.patch.length === 0 ||
+                data[i].eyes.left.width <= 0 || data[i].eyes.left.height <= 0 ||
+                data[i].eyes.right.width <= 0 || data[i].eyes.right.height <= 0) {
+                continue;
+            }
             data[i].eyes.left.patch = new ImageData(new Uint8ClampedArray(data[i].eyes.left.patch), data[i].eyes.left.width, data[i].eyes.left.height);
             data[i].eyes.right.patch = new ImageData(new Uint8ClampedArray(data[i].eyes.right.patch), data[i].eyes.right.width, data[i].eyes.right.height);
             this.addData(data[i].eyes, data[i].screenPos, data[i].type);
@@ -10055,6 +10069,13 @@ var mosseFilterResponses = function() {
     webgazer.reg.RidgeRegThreaded.prototype.setData = function(data) {
         for (var i = 0; i < data.length; i++) {
             //TODO this is a kludge, needs to be fixed
+            if (!data[i].eyes || !data[i].eyes.left || !data[i].eyes.right ||
+                !data[i].eyes.left.patch || !data[i].eyes.right.patch ||
+                data[i].eyes.left.patch.length === 0 || data[i].eyes.right.patch.length === 0 ||
+                data[i].eyes.left.width <= 0 || data[i].eyes.left.height <= 0 ||
+                data[i].eyes.right.width <= 0 || data[i].eyes.right.height <= 0) {
+                continue;
+            }
             data[i].eyes.left.patch = new ImageData(new Uint8ClampedArray(data[i].eyes.left.patch), data[i].eyes.left.width, data[i].eyes.left.height);
             data[i].eyes.right.patch = new ImageData(new Uint8ClampedArray(data[i].eyes.right.patch), data[i].eyes.right.width, data[i].eyes.right.height);
             this.addData(data[i].eyes, data[i].screenPos, data[i].type);
@@ -10664,6 +10685,9 @@ function store_points(x, y, k) {
      * @param {Number} height - the new height of the canvas
      */
     function paintCurrentFrame(canvas, width, height) {
+        if (!videoElement || videoElement.videoWidth <= 0 || videoElement.videoHeight <= 0 || width <= 0 || height <= 0) {
+            return;
+        }
         if (canvas.width != width) {
             canvas.width = width;
         }
@@ -10716,6 +10740,12 @@ function store_points(x, y, k) {
     function loop() {
 
         if (!paused) {
+            if (!videoElement || !videoElementCanvas ||
+                videoElement.videoWidth <= 0 || videoElement.videoHeight <= 0 ||
+                videoElementCanvas.width <= 0 || videoElementCanvas.height <= 0) {
+                requestAnimFrame(loop);
+                return;
+            }
 
             // Paint the latest video frame into the canvas which will be analyzed by WebGazer
             // [20180729 JT] Why do we need to do this? clmTracker does this itself _already_, which is just duplicating the work.
@@ -10871,11 +10901,22 @@ function store_points(x, y, k) {
      * Loads the global data and passes it to the regression model
      */
     function loadGlobalData() {
-        var storage = JSON.parse(window.localStorage.getItem(localstorageLabel)) || defaults;
+        var storage = defaults;
+        try {
+            storage = JSON.parse(window.localStorage.getItem(localstorageLabel)) || defaults;
+        } catch (err) {
+            window.localStorage.removeItem(localstorageLabel);
+            storage = defaults;
+        }
         settings = storage.settings;
         data = storage.data;
         for (var reg in regs) {
-            regs[reg].setData(storage.data);
+            try {
+                regs[reg].setData(storage.data || []);
+            } catch (err) {
+                window.localStorage.removeItem(localstorageLabel);
+                regs[reg].setData([]);
+            }
         }
     }
 
@@ -10968,6 +11009,9 @@ function store_points(x, y, k) {
         // Add other preview/feedback elements to the screen once the video has shown and its parameters are initialized
         document.body.appendChild(videoElement);
         function setupPreviewVideo(e) {
+            if (videoElement.videoWidth <= 0 || videoElement.videoHeight <= 0) {
+                return;
+            }
             
             // All video preview parts have now been added, so set the size both internally and in the preview window.
             setInternalVideoBufferSizes( videoElement.videoWidth, videoElement.videoHeight );
