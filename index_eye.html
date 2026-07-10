@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>gamble1 jsPsych desktop</title>
+
+  <script src="/jspsych/static/jspsych@7.1.2.js"></script>
+  <script src="/jspsych/static/plugin-preload@1.1.0.js"></script>
+  <script src="/jspsych/static/plugin-html-keyboard-response@1.1.0.js"></script>
+  <script src="/jspsych/static/plugin-fullscreen@1.1.0.js"></script>
+  <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
+  <link href="/jspsych/static/jspsych.css" rel="stylesheet" type="text/css" />
+  <script src="/jspsych/static/credamo-jspsych.min.js"></script>
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: rgb(128, 128, 128);
+      font-family: Arial, "Microsoft YaHei", "SimHei", sans-serif;
+    }
+
+    .jspsych-display-element,
+    .jspsych-content-wrapper,
+    #jspsych-content {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: rgb(128, 128, 128) !important;
+      overflow: hidden !important;
+    }
+
+    .fullscreen-start-screen {
+      box-sizing: border-box;
+      width: min(900px, calc(100vw - 80px));
+      margin: 0 auto 36px auto;
+      background: transparent;
+      color: black;
+      display: block;
+      text-align: center;
+      font-size: 28px;
+      line-height: 1.7;
+    }
+
+    .jspsych-btn,
+    .survey-next-btn {
+      display: block;
+      margin: 0 auto !important;
+      font-size: 27px !important;
+      padding: 12px 30px !important;
+      border-radius: 6px !important;
+      border: 1px solid #777;
+      background: white;
+      color: black;
+      cursor: pointer !important;
+    }
+
+    .survey-next-wrap {
+      width: min(980px, calc(100vw - 90px));
+      margin: 30px auto 0 auto;
+      padding-bottom: 40px;
+    }
+
+    .matlab-screen {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgb(128, 128, 128);
+      color: rgb(0, 0, 0);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    .matlab-text {
+      white-space: pre-line;
+      font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 42px;
+      line-height: 1.35;
+      color: rgb(0, 0, 0);
+      text-align: center;
+      max-width: 92vw;
+    }
+
+    .fixation-screen {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgb(128, 128, 128);
+      overflow: hidden;
+      cursor: none;
+    }
+
+    .fixation-dot {
+      position: absolute;
+      left: 50vw;
+      top: 50vh;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: rgb(255, 255, 255);
+      transform: translate(-50%, -50%);
+    }
+
+    .gamble-screen {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgb(128, 128, 128);
+      overflow: hidden;
+      cursor: none;
+    }
+
+    .stim-frame {
+      position: absolute;
+      top: 50vh;
+      width: 500px;
+      height: 500px;
+      transform: translate(-50%, -50%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      overflow: visible;
+    }
+
+    .stim-left {
+      left: 25vw;
+    }
+
+    .stim-right {
+      left: 75vw;
+    }
+
+    .gamble-amount {
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      color: rgb(255, 255, 255);
+      font-weight: normal;
+      line-height: 1;
+      margin: 0;
+      padding: 0;
+    }
+
+    .font-large {
+      font-size: 46vh;
+    }
+
+    .font-small {
+      font-size: 18.4vh;
+    }
+
+    .survey-screen {
+      box-sizing: border-box;
+      width: 100vw;
+      height: 100vh;
+      background: white;
+      color: black;
+      overflow-y: auto;
+      cursor: auto;
+      padding: 80px 0 60px 0;
+      font-family: Arial, "Microsoft YaHei", "SimHei", sans-serif;
+      text-align: left;
+    }
+
+    .survey-card {
+      box-sizing: border-box;
+      width: min(980px, calc(100vw - 90px));
+      margin: 18px auto;
+      padding: 22px 46px;
+      background: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 23px;
+      line-height: 1.65;
+    }
+
+    .survey-required {
+      color: red;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .survey-red {
+      color: red;
+      font-weight: bold;
+    }
+
+    .survey-question-title {
+      margin: 0 0 18px 0;
+      font-weight: bold;
+    }
+
+    .survey-subtitle {
+      margin: 8px 0 18px 0;
+      font-size: 21px;
+    }
+
+    .scale-label-row {
+      display: flex;
+      justify-content: space-between;
+      width: 450px;
+      margin: 18px 0 8px 0;
+      font-size: 19px;
+    }
+
+    .scale-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .scale-row label {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 42px;
+      height: 26px;
+      border: 1px solid #999;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .scale-row input[type="radio"] {
+      display: none;
+    }
+
+    .scale-row label:has(input[type="radio"]:checked) {
+      background: #2f80ed;
+      color: white;
+      border-color: #2f80ed;
+    }
+
+    .scale-row input[type="radio"]:checked + span {
+      font-weight: normal;
+      text-decoration: none;
+      color: white;
+    }
+
+    .survey-card textarea {
+      box-sizing: border-box;
+      width: 560px;
+      max-width: 100%;
+      height: 280px;
+      font-size: 21px;
+      padding: 8px;
+      font-family: Arial, "Microsoft YaHei", "SimHei", sans-serif;
+    }
+
+    .survey-card input[type="text"],
+    .survey-card input[type="number"],
+    .survey-card select {
+      box-sizing: border-box;
+      width: 360px;
+      max-width: 100%;
+      height: 34px;
+      font-size: 21px;
+      padding: 5px 8px;
+      font-family: Arial, "Microsoft YaHei", "SimHei", sans-serif;
+    }
+
+    .ladder-image {
+      display: block;
+      margin: 12px auto 18px auto;
+      width: 170px;
+      max-width: 40vw;
+    }
+
+    .draw-screen,
+    .payoff-screen,
+    .credamo-end-screen,
+    .abort-screen {
+      width: 100vw;
+      height: 100vh;
+      background: rgb(128, 128, 128);
+      color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      font-family: "SimHei", "Microsoft YaHei", Arial, sans-serif;
+      overflow: hidden;
+      cursor: auto;
+    }
+
+    .draw-screen {
+      flex-direction: column;
+      font-size: 34px;
+      line-height: 1.6;
+    }
+
+    .payoff-text {
+      max-width: 86vw;
+      font-size: 34px;
+      line-height: 1.65;
+      white-space: pre-line;
+    }
+
+    .credamo-end-screen {
+      font-size: 32px;
+      line-height: 1.5;
+    }
+
+    .abort-screen {
+      font-size: 40px;
+      font-weight: bold;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+
+<script src="webgazer.js"></script>
+<script src="gamble_eye_tracking.js"></script>
+
+<script>
+  /* initialize jsPsych */
+  var jsPsych = initJsPsych({
+    use_webaudio: false,
+    on_finish: function () {
+      window.gamble1_data_json = jsPsych.data.get().json();
+      window.gamble1_data_csv = jsPsych.data.get().csv();
+      window.gamble1_gaze_csv = window.GambleEyeTracking ? GambleEyeTracking.getGazeCsv() : '';
+      console.log('gamble1 data JSON:', window.gamble1_data_json);
+      console.log('gamble1 data CSV:', window.gamble1_data_csv);
+      console.log('gamble1 gaze CSV:', window.gamble1_gaze_csv);
+    }
+  });
+
+  /* create timeline */
+  var timeline = [];
+
+  var bkRgb = 'rgb(128, 128, 128)';
+  var fontRgb = 'rgb(0, 0, 0)';
+  var stimRgb = 'rgb(255, 255, 255)';
+
+  var DATAPIPE_EXPERIMENT_ID = 'eM50ta8ijVnY';
+  var acceptKey = 1;
+  var formalTrialCount = 98;
+  var experimentStarted = false;
+  var experimentCompleted = false;
+  var experimentAborted = false;
+  var payoffInfo = null;
+
+  var participantId =
+    jsPsych.data.getURLVariable('participant') ||
+    jsPsych.data.getURLVariable('participant_id') ||
+    jsPsych.data.getURLVariable('subject') ||
+    jsPsych.data.getURLVariable('subject_id') ||
+    jsPsych.data.getURLVariable('pid') ||
+    jsPsych.data.getURLVariable('uid') ||
+    jsPsych.randomization.randomID(12);
+
+  var fileTimestamp = Date.now();
+  var behaviorFilename = participantId + '_' + fileTimestamp + '_gamble_eye_behavior.csv';
+  var gazeFilename = participantId + '_' + fileTimestamp + '_gamble_eye_gaze.csv';
+
+  jsPsych.data.addProperties({
+    Subject: participantId,
+    AcceptKey: acceptKey,
+    platform: 'jianshu_jspsych_embed',
+    experiment_name: 'gamble1_desktop_jspsych_eye_tracking',
+    response_mapping: 'ArrowUp_accept_ArrowDown_reject',
+    formal_trial_count: formalTrialCount,
+    datapipe_experiment_id: DATAPIPE_EXPERIMENT_ID,
+    behavior_filename: behaviorFilename,
+    gaze_filename: gazeFilename
+  });
+
+  GambleEyeTracking.init(jsPsych, participantId);
+
+  var titleText = '赌局游戏\n\n\n请按“空格键”进入';
+  var remindText = '请注意:\n\n实验中赢钱和输钱的面额值在字体大小上可能有所不同\n\n但这与游戏规则没有任何关系\n\n并不会影响你最终的收益\n\n如你已明白，请按“空格键”继续';
+  var keyText = '请按“↑”键表示接受\n\n请按“↓”键表示拒绝\n\n\n按“空格键”继续';
+  var practiceText = '接下来有三个轮次的练习\n\n\n\n练习轮次不会被抽取执行\n\n如有疑问，可以在练习期间举手询问实验人员\n\n\n准备好后，请按“空格键”进入练习';
+  var startText = '练习结束！游戏即将正式开始\n\n你的决策时间会被记录，\n因此游戏开始后，请不要走神或讲话，\n保持专注，直到你完成游戏。\n\n如你已准备好\n按“空格键”立刻开始';
+  var endText = '赌局游戏结束！\n\n\n请按任意键完成实验';
+
+  function generateProbe() {
+    var base = [];
+    var pairIndex = 0;
+
+    for (var gain = 3; gain <= 9; gain++) {
+      for (var loss = 3; loss <= 9; loss++) {
+        pairIndex += 1;
+        var gainOnLeft = Math.random() < 0.5 ? 0 : 1;
+
+        base.push({
+          pair_index: pairIndex,
+          unique_gamble_id: 'G' + gain + '_L' + loss,
+          gain: gain,
+          loss: loss,
+          GainOnLeft: gainOnLeft
+        });
+      }
+    }
+
+    var data = [];
+
+    for (var i = 0; i < base.length; i++) {
+      data.push({
+        pair_index: base[i].pair_index,
+        unique_gamble_id: base[i].unique_gamble_id,
+        gain: base[i].gain,
+        loss: base[i].loss,
+        GainOnLeft: base[i].GainOnLeft,
+        Fontsize: 1
+      });
+    }
+
+    for (var j = 0; j < base.length; j++) {
+      data.push({
+        pair_index: base[j].pair_index,
+        unique_gamble_id: base[j].unique_gamble_id,
+        gain: base[j].gain,
+        loss: base[j].loss,
+        GainOnLeft: base[j].GainOnLeft,
+        Fontsize: 0
+      });
+    }
+
+    var shuffled = jsPsych.randomization.shuffle(data);
+
+    for (var k = 0; k < shuffled.length; k++) {
+      shuffled[k].original_probe_index = k + 1;
+    }
+
+    return shuffled;
+  }
+
+  var probe = generateProbe();
+  var practiceProbe = [
+    {
+      pair_index: 'practice_1',
+      unique_gamble_id: 'P1_G1_L2',
+      gain: 1,
+      loss: 2,
+      GainOnLeft: 1,
+      Fontsize: 1
+    },
+    {
+      pair_index: 'practice_2',
+      unique_gamble_id: 'P2_G2_L1',
+      gain: 2,
+      loss: 1,
+      GainOnLeft: 0,
+      Fontsize: 0
+    },
+    {
+      pair_index: 'practice_3',
+      unique_gamble_id: 'P3_G1_L2',
+      gain: 1,
+      loss: 2,
+      GainOnLeft: 0,
+      Fontsize: 1
+    }
+  ];
+
+  function randomFixationDuration() {
+    return Math.random() * 1000 + 1000;
+  }
+
+  function instructionScreen(text, screenName) {
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus:
+        '<div class="matlab-screen" style="background:' + bkRgb + '; color:' + fontRgb + ';">' +
+          '<div class="matlab-text">' + text + '</div>' +
+        '</div>',
+      choices: [' '],
+      data: {
+        phase: 'instruction',
+        screen: screenName
+      }
+    };
+  }
+
+  function fixationTrial(phaseName, trialIndex) {
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus:
+        '<div class="fixation-screen" style="background:' + bkRgb + ';">' +
+          '<div class="fixation-dot" style="background:' + stimRgb + ';"></div>' +
+        '</div>',
+      choices: 'NO_KEYS',
+      data: {
+        phase: phaseName,
+        trial_part: 'fixation',
+        trial_index: trialIndex
+      },
+      on_load: async function () {
+        var randomDuration = randomFixationDuration();
+        await new Promise(function (resolve) {
+          window.setTimeout(resolve, randomDuration);
+        });
+        var fixationResult = await GambleEyeTracking.waitForCenterFixation(500, 130, 120000);
+        jsPsych.finishTrial({
+          fixation_random_duration_ms: Math.round(randomDuration),
+          fixation_hold_required_ms: 500,
+          fixation_radius_px: 130,
+          fixation_timeout_ms: 120000,
+          fixation_acquired: fixationResult.fixation_acquired,
+          fixation_wait_ms: fixationResult.fixation_wait_ms,
+          fixation_sample_count: fixationResult.fixation_sample_count
+        });
+      }
+    };
+  }
+
+  function renderStimulus(row) {
+    var gainClass = row.Fontsize === 1 ? 'font-large' : 'font-small';
+    var lossClass = row.Fontsize === 0 ? 'font-large' : 'font-small';
+
+    var gainHtml = '<div class="gamble-amount ' + gainClass + '" data-eye-aoi="gain_amount" style="color:' + stimRgb + ';">+' + row.gain + '</div>';
+    var lossHtml = '<div class="gamble-amount ' + lossClass + '" data-eye-aoi="loss_amount" style="color:' + stimRgb + ';">-' + row.loss + '</div>';
+
+    var leftHtml = row.GainOnLeft === 1 ? gainHtml : lossHtml;
+    var rightHtml = row.GainOnLeft === 1 ? lossHtml : gainHtml;
+
+    return '<div class="gamble-screen" style="background:' + bkRgb + ';">' +
+      '<div class="stim-frame stim-left" data-eye-aoi="left_option">' + leftHtml + '</div>' +
+      '<div class="stim-frame stim-right" data-eye-aoi="right_option">' + rightHtml + '</div>' +
+      '</div>';
+  }
+
+  function makeGambleChoiceTrial(row, phaseName, trialIndex) {
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: renderStimulus(row),
+      choices: ['ArrowUp', 'ArrowDown'],
+      data: {
+        phase: phaseName,
+        trial_part: 'choice',
+        trial_index: trialIndex,
+        pair_index: row.pair_index,
+        unique_gamble_id: row.unique_gamble_id,
+        Gain: row.gain,
+        Loss: row.loss,
+        GainOnLeft: row.GainOnLeft,
+        Fontsize: row.Fontsize
+      },
+      on_load: function () {
+        GambleEyeTracking.startTrial(row, phaseName, trialIndex);
+      },
+      on_finish: function (data) {
+        data.Choice = data.response === 'ArrowUp' ? 1 : 0;
+        data.RT = Number.isFinite(data.rt) ? data.rt / 1000 : null;
+        var eyeSummary = GambleEyeTracking.stopTrial();
+        Object.keys(eyeSummary).forEach(function (key) {
+          data[key] = eyeSummary[key];
+        });
+      }
+    };
+  }
+
+  function collectFormData(form) {
+    var formData = new FormData(form);
+    var response = {};
+
+    formData.forEach(function (value, key) {
+      response[key] = value;
+    });
+
+    return response;
+  }
+
+  function makeFormTrial(innerHtml, phaseName, buttonLabel) {
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus:
+        '<div class="survey-screen">' +
+          '<form id="survey-form">' +
+            innerHtml +
+            '<div class="survey-next-wrap">' +
+              '<button type="submit" class="survey-next-btn">' + buttonLabel + '</button>' +
+            '</div>' +
+          '</form>' +
+        '</div>',
+      choices: 'NO_KEYS',
+      data: {
+        phase: phaseName
+      },
+      on_load: function () {
+        var form = document.getElementById('survey-form');
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+
+          if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+          }
+
+          jsPsych.finishTrial({
+            response: collectFormData(form)
+          });
+        });
+      }
+    };
+  }
+
+  function taskQuestionnaireIntroAndIllusionTrial() {
+    var html =
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p>恭喜你完成了赌局任务！接下来请填写后测问卷。</p>' +
+        '<p>问卷包括两个部分：赌局任务问题、个人信息问题。总共包括6道题目，需要<span class="survey-red">2分钟</span>左右完成。</p>' +
+      '</div>' +
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p>第一部分是<b>赌局任务相关</b>问卷。</p>' +
+        '<p>共2个问题，没有对错之分，请根据你的主观感受和实际选择回答即可。</p>' +
+      '</div>' +
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p class="survey-question-title">1. 在赌局任务中，当潜在收益和潜在损失两者的字体大小不同时，即两者一个字体大一个字体小时，你是否会不由自主地觉得，字体大的那个金额比字体小的那个金额，数额也更大？</p>' +
+        '<p class="survey-subtitle">请使用1-7的评分标准来评估你的错觉，其中1表示你“完全没有这种感觉”，7表示你“有非常强烈的感觉”。</p>' +
+        '<div class="scale-label-row"><span>完全没有感觉</span><span>非常强烈的感觉</span></div>' +
+        '<div class="scale-row">' +
+          '<label><input type="radio" name="fontsize_illusion" value="1" required><span>1</span></label>' +
+          '<label><input type="radio" name="fontsize_illusion" value="2"><span>2</span></label>' +
+          '<label><input type="radio" name="fontsize_illusion" value="3"><span>3</span></label>' +
+          '<label><input type="radio" name="fontsize_illusion" value="4"><span>4</span></label>' +
+          '<label><input type="radio" name="fontsize_illusion" value="5"><span>5</span></label>' +
+          '<label><input type="radio" name="fontsize_illusion" value="6"><span>6</span></label>' +
+          '<label><input type="radio" name="fontsize_illusion" value="7"><span>7</span></label>' +
+        '</div>' +
+      '</div>';
+
+    return makeFormTrial(html, 'post_survey_task_illusion', '下一页');
+  }
+
+  function taskQuestionnaireStrategyTrial() {
+    var html =
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p class="survey-question-title">2. 在赌局任务当中，你做出选择的<span class="survey-red">主要策略</span>或依据是？（不少于100字）</p>' +
+        '<textarea name="strategy" required minlength="100" placeholder="请至少输入100字"></textarea>' +
+      '</div>';
+
+    return makeFormTrial(html, 'post_survey_task_strategy', '下一页');
+  }
+
+  function personalQuestionnaireBasicTrial() {
+    var html =
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p>以下是个人信息问题。</p>' +
+        '<p>回答将仅用于研究目的，不会用于商业目的。你的个人信息将被严格保密。</p>' +
+      '</div>' +
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p class="survey-question-title">1、你的受教育年限（单位：年；从小学一年级开始计算，例如：现在科大四年级 = 小学6年 + 初中高中6年 + 本科3年 = 15）</p>' +
+        '<input type="number" name="education_years" min="0" step="1" required>' +
+      '</div>' +
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p class="survey-question-title">2、你所攻读的最高学历的专业</p>' +
+        '<select name="major" required>' +
+          '<option value="" disabled selected>请选择</option>' +
+          '<option value="哲学">哲学</option>' +
+          '<option value="经济学">经济学</option>' +
+          '<option value="法学">法学</option>' +
+          '<option value="教育学">教育学</option>' +
+          '<option value="文学">文学</option>' +
+          '<option value="历史学">历史学</option>' +
+          '<option value="理学">理学</option>' +
+          '<option value="工学">工学</option>' +
+          '<option value="农学">农学</option>' +
+          '<option value="医学">医学</option>' +
+          '<option value="管理学">管理学</option>' +
+          '<option value="艺术学">艺术学</option>' +
+        '</select>' +
+      '</div>';
+
+    return makeFormTrial(html, 'post_survey_personal_basic', '下一页');
+  }
+
+  function personalQuestionnaireLadderTrial() {
+    var html =
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p class="survey-question-title">3、请想象下面这个梯子代表社会上人群的纵向分布。最上面的梯级（10）代表那些拥有最多财富、接受了最好的教育、拥有最好的工作、得到最多尊重的人；最下面的梯级（1）代表那些拥有最少财富、接受了最少的教育或没接受教育、做着最差的工作或没工作、得到了最少的尊重的人。</p>' +
+        '<p class="survey-question-title">综合来看，你认为你的家庭属于哪一梯级？</p>' +
+        '<img src="ladder.png" class="ladder-image" alt="社会阶梯图">' +
+        '<div class="scale-row">' +
+          '<label><input type="radio" name="ses_ladder" value="1" required><span>1</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="2"><span>2</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="3"><span>3</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="4"><span>4</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="5"><span>5</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="6"><span>6</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="7"><span>7</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="8"><span>8</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="9"><span>9</span></label>' +
+          '<label><input type="radio" name="ses_ladder" value="10"><span>10</span></label>' +
+        '</div>' +
+      '</div>';
+
+    return makeFormTrial(html, 'post_survey_personal_ladder', '下一页');
+  }
+
+  function personalQuestionnaireIncomeTrial() {
+    var html =
+      '<div class="survey-card">' +
+        '<span class="survey-required">*</span>' +
+        '<p class="survey-question-title">4、你每个月的可支配收入大约是：（单位：元）</p>' +
+        '<input type="number" name="monthly_disposable_income" min="0" step="1" required>' +
+      '</div>';
+
+    return makeFormTrial(html, 'post_survey_personal_income', '下一页');
+  }
+
+  function drawResultButtonTrial() {
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus:
+        '<div class="draw-screen">' +
+          '<div>最后，请按“空格键”抽取你的赌局实验结果</div>' +
+        '</div>',
+      choices: [' '],
+      data: {
+        phase: 'draw_result_button'
+      }
+    };
+  }
+
+  function calculatePayoff() {
+    if (payoffInfo !== null) {
+      return payoffInfo;
+    }
+
+    var formalChoices = jsPsych.data.get().filter({
+      phase: 'formal',
+      trial_part: 'choice'
+    }).values();
+
+    var selectedArrayIndex = Math.floor(Math.random() * formalChoices.length);
+    var selected = formalChoices[selectedArrayIndex];
+    var response = String(selected.response || '').toLowerCase();
+    var accepted = response === 'arrowup';
+    var gambleOutcome = null;
+    var finalIncome = 30;
+    var conditionText = '';
+
+    if (!accepted) {
+      conditionText = '你的选择是“拒绝”，你不会赢钱也不会输钱，你的最终收入是 30元。';
+    } else {
+      gambleOutcome = Math.random() < 0.5 ? 0 : 1;
+
+      if (gambleOutcome === 1) {
+        finalIncome = 30 + selected.Gain;
+        conditionText = '你的选择是“接受”，且你赢得了赌局，你的最终收入是 30 + ' + selected.Gain + ' = ' + finalIncome + '元。';
+      } else {
+        finalIncome = 30 - selected.Loss;
+        conditionText = '你的选择是“接受”，且你输掉了赌局，你的最终收入是 30 - ' + selected.Loss + ' = ' + finalIncome + '元。';
+      }
+    }
+
+    payoffInfo = {
+      selected_formal_trial_index: selected.trial_index,
+      selected_Gain: selected.Gain,
+      selected_Loss: selected.Loss,
+      selected_response: selected.response,
+      selected_accepted: accepted ? 1 : 0,
+      payoff_random_outcome: gambleOutcome,
+      final_income: finalIncome,
+      payoff_text: conditionText
+    };
+
+    return payoffInfo;
+  }
+
+  function payoffTrial() {
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: function () {
+        var p = calculatePayoff();
+
+        return '<div class="payoff-screen">' +
+          '<div class="payoff-text">' +
+            '你的第' + p.selected_formal_trial_index + '个试次被抽中。赢钱的金额是' + p.selected_Gain + '元，输钱的金额是' + p.selected_Loss + '元。\n\n' +
+            p.payoff_text +
+            '\n\n按空格键继续' +
+          '</div>' +
+        '</div>';
+      },
+      choices: [' '],
+      data: function () {
+        var p = calculatePayoff();
+
+        return {
+          phase: 'payoff',
+          selected_formal_trial_index: p.selected_formal_trial_index,
+          selected_Gain: p.selected_Gain,
+          selected_Loss: p.selected_Loss,
+          selected_response: p.selected_response,
+          selected_accepted: p.selected_accepted,
+          payoff_random_outcome: p.payoff_random_outcome,
+          final_income: p.final_income
+        };
+      }
+    };
+  }
+
+  function datapipeSaveTrial(label, filename, dataStringFunction) {
+    if (typeof jsPsychPipe !== 'undefined') {
+      return {
+        type: jsPsychPipe,
+        action: 'save',
+        experiment_id: DATAPIPE_EXPERIMENT_ID,
+        filename: filename,
+        data_string: dataStringFunction,
+        wait_message: 'Saving ' + label + ' data...',
+        data: {
+          phase: 'datapipe_save_' + label,
+          datapipe_experiment_id: DATAPIPE_EXPERIMENT_ID,
+          datapipe_filename: filename,
+          datapipe_plugin_loaded: 1
+        }
+      };
+    }
+
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus:
+        '<div class="matlab-screen" style="background:' + bkRgb + '; color:' + fontRgb + ';">' +
+          '<div class="matlab-text">DataPipe plugin was not loaded.<br>Saving was skipped for ' + label + ' data.</div>' +
+        '</div>',
+      choices: 'NO_KEYS',
+      trial_duration: 1000,
+      data: {
+        phase: 'datapipe_save_' + label,
+        datapipe_experiment_id: DATAPIPE_EXPERIMENT_ID,
+        datapipe_filename: filename,
+        datapipe_plugin_loaded: 0
+      }
+    };
+  }
+
+  function behaviorDataSaveTrial() {
+    return datapipeSaveTrial('behavior', behaviorFilename, function () {
+      return jsPsych.data.get().csv();
+    });
+  }
+
+  function gazeDataSaveTrial() {
+    return datapipeSaveTrial('gaze', gazeFilename, function () {
+      return GambleEyeTracking.getGazeCsv();
+    });
+  }
+
+  function abortExperimentBecauseFullscreenExit() {
+    if (experimentAborted || experimentCompleted) {
+      return;
+    }
+
+    experimentAborted = true;
+
+    jsPsych.data.addProperties({
+      fullscreen_exit_abort: 1
+    });
+
+    jsPsych.endExperiment(
+      '<div class="abort-screen">你已退出全屏！实验被迫中断，不得再次作答</div>'
+    );
+  }
+
+  document.addEventListener('fullscreenchange', function () {
+    if (experimentStarted && !experimentCompleted && !document.fullscreenElement) {
+      abortExperimentBecauseFullscreenExit();
+    }
+  });
+
+  document.addEventListener('webkitfullscreenchange', function () {
+    if (experimentStarted && !experimentCompleted && !document.webkitFullscreenElement) {
+      abortExperimentBecauseFullscreenExit();
+    }
+  });
+
+  /* add timeline trials */
+  const preload_trial = {
+    type: jsPsychPreload,
+    images: [],
+    data: {
+      phase: 'preload'
+    }
+  };
+  timeline.push(preload_trial);
+
+  const enter_fullscreen_trial = {
+    type: jsPsychFullscreen,
+    fullscreen_mode: true,
+    message: '<div class="fullscreen-start-screen">' +
+      '<div>请点击按钮进入全屏，开始赌局游戏。<br><br>进入全屏后，请不要退出全屏或切换页面。</div>' +
+    '</div>',
+    button_label: '进入全屏',
+    data: {
+      phase: 'fullscreen_start'
+    },
+    on_finish: function () {
+      experimentStarted = true;
+    }
+  };
+  timeline.push(enter_fullscreen_trial);
+
+  timeline.push(GambleEyeTracking.tutorialCalibrationTrial());
+
+  timeline.push(instructionScreen(titleText, 'title'));
+  timeline.push(instructionScreen(remindText, 'reminder'));
+  timeline.push(instructionScreen(keyText, 'response_key'));
+  timeline.push(instructionScreen(practiceText, 'practice_instruction'));
+
+  /* MATLAB practice_probe */
+  for (var p = 0; p < practiceProbe.length; p++) {
+    timeline.push(fixationTrial('practice', p + 1));
+    timeline.push(makeGambleChoiceTrial(practiceProbe[p], 'practice', p + 1));
+  }
+
+  timeline.push(instructionScreen(startText, 'formal_start'));
+
+  /* MATLAB: for i = 1:length(probe) */
+  for (var q = 0; q < probe.length; q++) {
+    timeline.push(fixationTrial('formal', q + 1));
+    timeline.push(makeGambleChoiceTrial(probe[q], 'formal', q + 1));
+  }
+
+  timeline.push(behaviorDataSaveTrial());
+  timeline.push(gazeDataSaveTrial());
+
+  /* add end trial */
+  const end_trial = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div class="credamo-end-screen">' + endText + '</div>',
+    on_start: function () {
+      experimentCompleted = true;
+      GambleEyeTracking.stopWebgazer();
+    },
+    on_finish() {
+      onCredamoEndTrialFinish(jsPsych.data.get().csv())
+    }
+  };
+  timeline.push(end_trial);
+
+  /* start the experiment */
+jsPsych.run(timeline);
+</script>
+</body>
+</html>
